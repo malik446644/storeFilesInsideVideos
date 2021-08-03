@@ -1,6 +1,8 @@
 main: main.o
 	$(info =========> linking the app <=========)
-	g++ main.o \
+	g++ \
+	-o dist/main.exe \
+	main.o \
 	-L./libs/ffmpeg/lib \
 	-lavcodec \
 	-lavformat  \
@@ -21,3 +23,6 @@ main.o: main.cpp
 clear:
 	del *.o
 	del a.exe
+
+run:
+	dist/main.exe
