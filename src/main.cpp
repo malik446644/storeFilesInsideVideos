@@ -5,7 +5,7 @@ extern "C" {
     #include <libavformat/avformat.h>
 }
 
-int main(){
+int main(){ 
     AVFormatContext *pFormatContext = avformat_alloc_context();
     if(!pFormatContext){
         std::cout << "cant allocate space for context" << std::endl;

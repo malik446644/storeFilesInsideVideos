@@ -1,8 +1,8 @@
-main: main.o
+main: temp/main.o
 	$(info =========> linking the app <=========)
 	g++ \
 	-o dist/main.exe \
-	main.o \
+	temp/main.o \
 	-L./libs/ffmpeg/lib \
 	-lavcodec \
 	-lavformat  \
@@ -12,17 +12,19 @@ main: main.o
 	-lswscale  \
 	-lswresample  \
 
-main.o: main.cpp
+temp/main.o: src/main.cpp
 	$(info =========> compiling the app <=========)
 	g++ \
 	-std=c++17 \
 	-c \
-	main.cpp \
-	-I./libs/ffmpeg/include \
+	src/main.cpp \
+	-I./libs/ffmpeg/include
+
+	move *.o temp
 
 clear:
-	del *.o
-	del a.exe
+	del temp\*.o
+	del dist\*.exe
 
 run:
 	dist/main.exe
