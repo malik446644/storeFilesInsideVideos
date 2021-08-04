@@ -10,7 +10,8 @@ main: temp/main.o
 	-lavfilter  \
 	-lavutil  \
 	-lswscale  \
-	-lswresample  \
+	-lswresample 
+	dist/main.exe
 
 temp/main.o: src/main.cpp
 	$(info =========> compiling the app <=========)
@@ -25,6 +26,3 @@ temp/main.o: src/main.cpp
 clear:
 	del temp\*.o
 	del dist\*.exe
-
-run:
-	dist/main.exe
