@@ -37,16 +37,11 @@ int main(){
     while (av_read_frame(pFormatContext, pPacket) >= 0) {
         avcodec_send_packet(pCodecContext, pPacket);
         avcodec_receive_frame(pCodecContext, pFrame);
-        printf(
-            "Frame %c (%d) pts %d dts %d key_frame %d [coded_picture_number %d, display_picture_number %d]\n\n",
-            av_get_picture_type_char(pFrame->pict_type),
-            pCodecContext->frame_number,
-            pFrame->pts,
-            pFrame->pkt_dts,
-            pFrame->key_frame,
-            pFrame->coded_picture_number,
-            pFrame->display_picture_number
-        );
+        std::cout << "\n\nprinting first frame information" << std::endl;
+        std::cout << std::hex << (void*)pFrame->data[0] << std::endl;
+        std::cout << pFrame->linesize[0] << std::endl;
+        std::cout << pFrame->width << std::endl;
+        std::cout << pFrame->height << std::endl;
         num++;
         if (num > 5) break;
     }
