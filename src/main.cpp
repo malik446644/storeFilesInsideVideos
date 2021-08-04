@@ -37,11 +37,12 @@ int main(){
     while (av_read_frame(pFormatContext, pPacket) >= 0) {
         avcodec_send_packet(pCodecContext, pPacket);
         avcodec_receive_frame(pCodecContext, pFrame);
-        std::cout << "\n\nprinting first frame information" << std::endl;
+        std::cout << "\n\nprinting frame information" << std::endl;
+        std::cout << pCodecContext->frame_number << std::endl;
         std::cout << std::hex << (void*)pFrame->data[0] << std::endl;
-        std::cout << pFrame->linesize[0] << std::endl;
-        std::cout << pFrame->width << std::endl;
-        std::cout << pFrame->height << std::endl;
+        std::cout << std::dec << pFrame->linesize[0] << std::endl;
+        std::cout << std::dec << pFrame->width << std::endl;
+        std::cout << std::dec << pFrame->height << std::endl;
         num++;
         if (num > 5) break;
     }
