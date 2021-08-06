@@ -11,12 +11,14 @@ main: temp/main.o
 	-lavutil  \
 	-lswscale  \
 	-lswresample 
+
 	dist/main.exe
 
 temp/main.o: src/main.cpp
 	$(info =========> compiling the app <=========)
 	g++ \
 	-std=c++17 \
+	-Wall \
 	-c \
 	src/main.cpp \
 	-I./libs/ffmpeg/include
