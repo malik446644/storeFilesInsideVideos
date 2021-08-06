@@ -12,7 +12,7 @@ main: temp/main.o
 	-lswscale  \
 	-lswresample 
 
-	dist/main.exe
+	dist/main.exe test.mp4 libx264
 
 temp/main.o: src/main.cpp
 	$(info =========> compiling the app <=========)
