@@ -10,7 +10,8 @@ main: temp/main.o
 	-lavfilter  \
 	-lavutil  \
 	-lswscale  \
-	-lswresample 
+	-lswresample \
+	-lpostproc
 
 	dist/main.exe test.mp4 libx264
 
@@ -18,8 +19,10 @@ temp/main.o: src/main.cpp
 	$(info =========> compiling the app <=========)
 	g++ \
 	-std=c++17 \
+	-g \
 	-c \
 	src/main.cpp \
+	-o main.o \
 	-I./libs/ffmpeg/include
 
 	move *.o temp
