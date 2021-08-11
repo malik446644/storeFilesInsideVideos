@@ -17,11 +17,10 @@ static void save_color_frame(uint8_t *buf, int wrap, int xsize, int ysize, char 
     if (f == NULL) {
         printf("cant open the file \n");
     }
-    fprintf(f, "P6\n%d %d\n%d\n", xsize, ysize, 255);
+    fprintf(f, "P5\n%d %d\n%d\n", xsize, ysize, 255);
     // fprintf(f, "P3\n%d %d\n%d\n", xsize, ysize, 255);
-    for (i = 0; i < ysize * xsize * 3; i++){
+    for (i = 0; i < ysize * wrap; i++){
         fwrite(buf + i, 1, 1, f);
-        // fprintf(f, "%u\n", buf[i]);
     }
     fclose(f);
 }
@@ -44,18 +43,18 @@ static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext, AVFra
 
         if (response >= 0) {
             char frame_filename[1024];
-            snprintf(frame_filename, sizeof(frame_filename), "%s-%d.ppm", "frame", pCodecContext->frame_number);
+            snprintf(frame_filename, sizeof(frame_filename), "%s-%d.pgm", "frame", pCodecContext->frame_number);
             if (pFrame->format != AV_PIX_FMT_YUV420P) {
                 printf("Warning: the generated file may not be a grayscale image, but could e.g. be just the R component if the video format is RGB");
             }
             // converting color format from yuv to rgb
-            SwsContext* swsCtx = sws_getContext(pFrame->width, pFrame->height, pCodecContext->pix_fmt, pFrame->width, pFrame->height, AV_PIX_FMT_RGB24, SWS_BILINEAR, NULL, NULL, NULL);
+            SwsContext* swsCtx = sws_getContext(pFrame->width, pFrame->height, pCodecContext->pix_fmt, pFrame->width, pFrame->height, AV_PIX_FMT_GRAY8, SWS_BILINEAR, NULL, NULL, NULL);
             if (!swsCtx){
                 printf("could not initialize the swsContext\n");
             }
-            uint8_t* realData = (uint8_t*)malloc(pFrame->width * pFrame->height * 3); 
+            uint8_t* realData = (uint8_t*)malloc(pFrame->width * pFrame->height); 
             uint8_t* theData[4] = {realData, NULL, NULL, NULL};
-            int destLineSize[4] = {pFrame->width * 3, 0, 0, 0};
+            int destLineSize[4] = {pFrame->width, 0, 0, 0};
             int theHeight = sws_scale(swsCtx, pFrame->data, pFrame->linesize, 0, pFrame->height, theData, destLineSize);
             sws_freeContext(swsCtx);
             // save a grayscale frame into a .pgm file
@@ -66,8 +65,8 @@ static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext, AVFra
 }
 
 
-int main(){
-    char* media = "media/video.mpeg";
+int video_to_file(char* media){
+    // char* media = "media/video.mpeg";
     
     printf("initializing all the containers, codecs and protocols.\n");
     AVFormatContext *pFormatContext = avformat_alloc_context();

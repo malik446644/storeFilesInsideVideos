@@ -7,9 +7,13 @@ extern "C" {
     #include <libavcodec/avcodec.h>
     #include <libavutil/opt.h>
     #include <libavutil/imgutils.h>
+    #include <libswscale/swscale.h>
+    #include <time.h>
 }
 
-static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt, FILE *outfile){
+#include "binary_op.h"
+
+static void encode_frame(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt, FILE *outfile){
     int ret;
 
     /* send the frame to the encoder */
@@ -37,8 +41,7 @@ static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt, FILE 
     }
 }
 
-int main(int argc, char **argv) {
-    const char *filename;
+int file_to_video(const char *filepath, uint8_t* bytes, size_t& bytes_size) {
     const AVCodec *codec;
     AVCodecContext *c= NULL;
     int i, ret, x, y;
@@ -47,14 +50,8 @@ int main(int argc, char **argv) {
     AVPacket *pkt;
     uint8_t endcode[] = { 0, 0, 1, 0xb7 };
 
-    if (argc <= 1) {
-        fprintf(stderr, "Usage: %s <output file> <codec name>\n", argv[0]);
-        exit(0);
-    }
-    filename = argv[1];
-
     /* find the mpeg1video encoder */
-    codec = avcodec_find_encoder(AV_CODEC_ID_H264);
+    codec = avcodec_find_encoder_by_name("libx264");
     if (!codec) {
         fprintf(stderr, "Codec not found\n");
         exit(1);
@@ -71,13 +68,13 @@ int main(int argc, char **argv) {
         exit(1);
 
     /* put sample parameters */
-    c->bit_rate = 400000;
+    c->bit_rate = 200000;
     /* resolution must be a multiple of two */
-    c->width = 352;
-    c->height = 288;
+    c->width = 1280;
+    c->height = 40;
     /* frames per second */
-    c->time_base = (AVRational){1, 25};
-    c->framerate = (AVRational){25, 1};
+    c->time_base = (AVRational){1, 24};
+    c->framerate = (AVRational){24, 1};
 
     /* emit one intra frame every ten frames
      * check frame pict_type before passing frame
@@ -100,9 +97,9 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    f = fopen(filename, "wb");
+    f = fopen(filepath, "wb");
     if (!f) {
-        fprintf(stderr, "Could not open %s\n", filename);
+        fprintf(stderr, "Could not open %s\n", filepath);
         exit(1);
     }
 
@@ -120,7 +117,15 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Could not allocate the video frame data\n");
         exit(1);
     }
+    
+    // creating buffer to store rgb data
+    uint8_t* realData = (uint8_t*)malloc(frame->width * frame->height); 
+    uint8_t* theData[4] = {realData, NULL, NULL, NULL};
+    int lineSize[4] = {frame->width, 0, 0, 0};
+    //creating scalara context
+    SwsContext* swsCtx = sws_getContext(frame->width, frame->height, AV_PIX_FMT_GRAY8, frame->width, frame->height, c->pix_fmt, SWS_BILINEAR, NULL, NULL, NULL);
 
+    uint8_t color = 240;
     /* encode 1 second of video */
     for (i = 0; i < 25 * 5; i++) {
         fflush(stdout);
@@ -130,35 +135,39 @@ int main(int argc, char **argv) {
         if (ret < 0)
             exit(1);
 
-        /* prepare a dummy image */
-        /* Y */
-        for (y = 0; y < c->height; y++) {
-            for (x = 0; x < c->width; x++) {
-                frame->data[0][y * frame->linesize[0] + x] = x + y + i * 3;
+        // fill realData with RGB colors data
+        for (x = 0; x < frame->width; x++) {
+            uint8_t arr[8];
+            byte_to_bits(arr, bytes[x]);
+            for (y = 0; y < frame->height; y++) {
+                if (y < frame->height / 8) realData[y * frame->width + x] = arr[0] == 1 ? 255 : 0;
+                else if (y < (frame->height / 8) * 2) realData[y * frame->width + x] = arr[1] == 1 ? 255 : 0;
+                else if (y < (frame->height / 8) * 3) realData[y * frame->width + x] = arr[2] == 1 ? 255 : 0;
+                else if (y < (frame->height / 8) * 4) realData[y * frame->width + x] = arr[3] == 1 ? 255 : 0;
+                else if (y < (frame->height / 8) * 5) realData[y * frame->width + x] = arr[4] == 1 ? 255 : 0;
+                else if (y < (frame->height / 8) * 6) realData[y * frame->width + x] = arr[5] == 1 ? 255 : 0;
+                else if (y < (frame->height / 8) * 7) realData[y * frame->width + x] = arr[6] == 1 ? 255 : 0;
+                else if (y < (frame->height / 8) * 8) realData[y * frame->width + x] = arr[7] == 1 ? 255 : 0;
             }
         }
 
-        /* Cb and Cr */
-        for (y = 0; y < c->height/2; y++) {
-            for (x = 0; x < c->width/2; x++) {
-                frame->data[1][y * frame->linesize[1] + x] = 128 + y + i * 2;
-                frame->data[2][y * frame->linesize[2] + x] = 64 + x + i * 5;
-            }
-        }
+        // converting the rgb data to yuv and pushit to the frame
+        sws_scale(swsCtx, theData, lineSize, 0, frame->height, frame->data, frame->linesize);
 
         frame->pts = i;
 
         /* encode the image */
-        encode(c, frame, pkt, f);
+        encode_frame(c, frame, pkt, f);
     }
 
     /* flush the encoder */
-    encode(c, NULL, pkt, f);
+    encode_frame(c, NULL, pkt, f);
 
     /* add sequence end code to have a real MPEG file */
     fwrite(endcode, 1, sizeof(endcode), f);
     fclose(f);
 
+    sws_freeContext(swsCtx);
     avcodec_free_context(&c);
     av_frame_free(&frame);
     av_packet_free(&pkt);
