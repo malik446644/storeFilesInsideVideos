@@ -24,7 +24,9 @@ int main(int argc, char **argv) {
 
     if(strcmp(argv[1], "encode") == 0){
         //converting a buffer of bytes into a video
-        file_to_video("test.txt", "test.mp4");
+        if(file_to_video("Capture.PNG", "test.mp4") == 1){
+            printf("\n[ERROR] ===> the minimum file size is 12 KB\n");
+        };
     }else if(strcmp(argv[1], "decode") == 0){
         // converting a video to a file
         video_to_file("test.mp4");

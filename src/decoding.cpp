@@ -156,14 +156,11 @@ int video_to_file(char* media){
     }
 
     int response = 0;
-    int how_many_packets_to_process = 2;
     while (av_read_frame(pFormatContext, pPacket) >= 0)
     {
         if (pPacket->stream_index == video_stream_index) {
-            printf("AVPacket->pts %d\n", pPacket->pts);
             response = decode_packet(pPacket, pCodecContext, pFrame);
             if (response < 0) break;
-            if (--how_many_packets_to_process <= 0) break;
         }
         av_packet_unref(pPacket);
     }

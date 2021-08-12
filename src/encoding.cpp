@@ -69,10 +69,10 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
         exit(1);
 
     /* put sample parameters */
-    c->bit_rate = 200000;
+    c->bit_rate = 800000 * 1;
     /* resolution must be a multiple of two */
     c->width = 1280;
-    c->height = 40;
+    c->height = 64;
     /* frames per second */
     c->time_base = (AVRational){1, 24};
     c->framerate = (AVRational){24, 1};
@@ -130,12 +130,13 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
     FILE* infile = fopen(infilepath, "rb");
     fseek(infile, 0, SEEK_END);
     size_t infile_size =  ftell(infile);
+    if(infile_size < 12800) return 1;
     rewind(infile);
     unsigned long long frames_count = (uint8_t)ceil((double)infile_size / (double)frame->width);
     printf("number of frames to store %u bytes is: %u\n", infile_size, frames_count);
 
-    /* encode 1 second of video */
-    for (i = 0; i < frames_count; i++) {
+    /* encode video frames */
+    for (i = 0; i < frames_count + 1; i++) {
         fflush(stdout);
 
         // storing file data into memory
@@ -161,6 +162,7 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
                 else if (y < (frame->height / 8) * 6) realData[y * frame->width + x] = arr[5] == 1 ? 255 : 0;
                 else if (y < (frame->height / 8) * 7) realData[y * frame->width + x] = arr[6] == 1 ? 255 : 0;
                 else if (y < (frame->height / 8) * 8) realData[y * frame->width + x] = arr[7] == 1 ? 255 : 0;
+                else if (y < (frame->height / 8) * 9) realData[y * frame->width + x] = arr[0] == 1 ? 255 : 0;
             }
         }
 
