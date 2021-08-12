@@ -9,6 +9,7 @@ extern "C" {
     #include <libavutil/imgutils.h>
     #include <libswscale/swscale.h>
     #include <time.h>
+    #include <math.h>
 }
 
 #include "binary_op.h"
@@ -41,7 +42,7 @@ static void encode_frame(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
     }
 }
 
-int file_to_video(const char *filepath, uint8_t* bytes, size_t& bytes_size) {
+int file_to_video(const char *infilepath, const char *outfilepath) {
     const AVCodec *codec;
     AVCodecContext *c= NULL;
     int i, ret, x, y;
@@ -97,9 +98,9 @@ int file_to_video(const char *filepath, uint8_t* bytes, size_t& bytes_size) {
         exit(1);
     }
 
-    f = fopen(filepath, "wb");
+    f = fopen(outfilepath, "wb");
     if (!f) {
-        fprintf(stderr, "Could not open %s\n", filepath);
+        fprintf(stderr, "Could not open %s\n", outfilepath);
         exit(1);
     }
 
@@ -125,10 +126,22 @@ int file_to_video(const char *filepath, uint8_t* bytes, size_t& bytes_size) {
     //creating scalara context
     SwsContext* swsCtx = sws_getContext(frame->width, frame->height, AV_PIX_FMT_GRAY8, frame->width, frame->height, c->pix_fmt, SWS_BILINEAR, NULL, NULL, NULL);
 
-    uint8_t color = 240;
+    // open the file to take the data from
+    FILE* infile = fopen(infilepath, "rb");
+    fseek(infile, 0, SEEK_END);
+    size_t infile_size =  ftell(infile);
+    rewind(infile);
+    unsigned long long frames_count = (uint8_t)ceil((double)infile_size / (double)frame->width);
+    printf("number of frames to store %u bytes is: %u\n", infile_size, frames_count);
+
     /* encode 1 second of video */
-    for (i = 0; i < 25 * 5; i++) {
+    for (i = 0; i < frames_count; i++) {
         fflush(stdout);
+
+        // storing file data into memory
+        uint8_t* bytes = (uint8_t*)malloc(frame->width);
+        memset(bytes, 0x00, frame->width);                      // clearing the memory from any old data
+        fread(bytes, 1, frame->width, infile);
 
         /* make sure the frame data is writable */
         ret = av_frame_make_writable(frame);
@@ -158,6 +171,9 @@ int file_to_video(const char *filepath, uint8_t* bytes, size_t& bytes_size) {
 
         /* encode the image */
         encode_frame(c, frame, pkt, f);
+
+        // freeing the memory allocation
+        free(bytes);
     }
 
     /* flush the encoder */
@@ -165,7 +181,10 @@ int file_to_video(const char *filepath, uint8_t* bytes, size_t& bytes_size) {
 
     /* add sequence end code to have a real MPEG file */
     fwrite(endcode, 1, sizeof(endcode), f);
+
+    // closing all opened files
     fclose(f);
+    fclose(infile);
 
     sws_freeContext(swsCtx);
     avcodec_free_context(&c);
