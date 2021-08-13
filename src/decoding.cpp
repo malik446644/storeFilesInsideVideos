@@ -9,21 +9,27 @@ extern "C" {
     #include <libavutil/avutil.h>
 }
 
+#include "functions.h"
+
 FILE* outfile;
 
 static void save_color_frame(uint8_t *buf, int wrap, int xsize, int ysize, char *filename){
+    uint8_t bits[8];
+    uint8_t byte;
     int ysize_part = ysize / 8;
     for (int x = 0; x < wrap; x++) {
         for (int y = 0; y < ysize; y++) {
-            printf("%d\n" ,buf[0 * wrap + x]);
-            printf("%d\n", buf[(ysize_part * 1) * wrap + x]);
-            printf("%d\n", buf[(ysize_part * 2) * wrap + x]);
-            printf("%d\n", buf[(ysize_part * 3) * wrap + x]);
-            printf("%d\n", buf[(ysize_part * 4) * wrap + x]);
-            printf("%d\n", buf[(ysize_part * 5) * wrap + x]);
-            printf("%d\n", buf[(ysize_part * 6) * wrap + x]);
-            printf("%d\n", buf[(ysize_part * 7) * wrap + x]);
+            bits[0] = buf[0 * wrap + x] > 127 ? 1 : 0;
+            bits[1] = buf[(ysize_part * 1) * wrap + x] > 127 ? 1 : 0;
+            bits[2] = buf[(ysize_part * 2) * wrap + x] > 127 ? 1 : 0;
+            bits[3] = buf[(ysize_part * 3) * wrap + x] > 127 ? 1 : 0;
+            bits[4] = buf[(ysize_part * 4) * wrap + x] > 127 ? 1 : 0;
+            bits[5] = buf[(ysize_part * 5) * wrap + x] > 127 ? 1 : 0;
+            bits[6] = buf[(ysize_part * 6) * wrap + x] > 127 ? 1 : 0;
+            bits[7] = buf[(ysize_part * 7) * wrap + x] > 127 ? 1 : 0;
         }
+        bits_to_byte(bits, &byte);
+        printf("%x\n", byte);
     }
 }
 

@@ -63,3 +63,4 @@ temp/main.o: src/main.cpp
 clear:
 	del temp\*.o
 	del dist\*.exe
+	del *.o
