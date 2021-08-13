@@ -13,7 +13,9 @@ extern "C" {
     #include <string.h>
 }
 
-#include "functions.h"
+#include "decoding.h"
+#include "encoding.h"
+
 
 int main(int argc, char **argv) {
 
