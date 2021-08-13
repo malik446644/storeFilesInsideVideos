@@ -150,7 +150,7 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
             fread(bytes, 1, frame->width, infile);
         }else{
             memset(bytes, 0x00, frame->width);                                  // clearing the memory from any old data
-            sprintf((char *)bytes, "%s\n%u\n", infile_name, infile_size);       // adding the header information in the first frame
+            sprintf((char *)bytes, "%s\n%u\0", infile_name, infile_size);       // adding the header information in the first frame
         }
 
         /* make sure the frame data is writable */
@@ -203,6 +203,8 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
     avcodec_free_context(&c);
     av_frame_free(&frame);
     av_packet_free(&pkt);
+
+    printf("\n\ndone converting the file into a video\n\n");
 
     return 0;
 }

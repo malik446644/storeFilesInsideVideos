@@ -12,24 +12,48 @@ extern "C" {
 #include "functions.h"
 
 FILE* outfile;
+bool is_header_done = false;
+char file_name[1024];
+size_t file_size;
 
 static void save_color_frame(uint8_t *buf, int wrap, int xsize, int ysize, char *filename){
+    uint8_t bytes[wrap];
     uint8_t bits[8];
     uint8_t byte;
     int ysize_part = ysize / 8;
     for (int x = 0; x < wrap; x++) {
-        for (int y = 0; y < ysize; y++) {
-            bits[0] = buf[0 * wrap + x] > 127 ? 1 : 0;
-            bits[1] = buf[(ysize_part * 1) * wrap + x] > 127 ? 1 : 0;
-            bits[2] = buf[(ysize_part * 2) * wrap + x] > 127 ? 1 : 0;
-            bits[3] = buf[(ysize_part * 3) * wrap + x] > 127 ? 1 : 0;
-            bits[4] = buf[(ysize_part * 4) * wrap + x] > 127 ? 1 : 0;
-            bits[5] = buf[(ysize_part * 5) * wrap + x] > 127 ? 1 : 0;
-            bits[6] = buf[(ysize_part * 6) * wrap + x] > 127 ? 1 : 0;
-            bits[7] = buf[(ysize_part * 7) * wrap + x] > 127 ? 1 : 0;
-        }
+        bits[0] = buf[0 * wrap + x] > 127 ? 1 : 0;
+        bits[1] = buf[(ysize_part * 1) * wrap + x] > 127 ? 1 : 0;
+        bits[2] = buf[(ysize_part * 2) * wrap + x] > 127 ? 1 : 0;
+        bits[3] = buf[(ysize_part * 3) * wrap + x] > 127 ? 1 : 0;
+        bits[4] = buf[(ysize_part * 4) * wrap + x] > 127 ? 1 : 0;
+        bits[5] = buf[(ysize_part * 5) * wrap + x] > 127 ? 1 : 0;
+        bits[6] = buf[(ysize_part * 6) * wrap + x] > 127 ? 1 : 0;
+        bits[7] = buf[(ysize_part * 7) * wrap + x] > 127 ? 1 : 0;
         bits_to_byte(bits, &byte);
-        printf("%x\n", byte);
+        bytes[x] = byte;
+    }
+    if(is_header_done == false) {
+        // extract the name and the size of the file
+        size_t last_position;
+        for (size_t i = 0; true; i++) {
+            file_name[i] = bytes[i];
+            last_position = i;
+            if(bytes[i] == 0x0A) {
+                file_name[i] = 0x00;
+                break;
+            }
+        }
+        // converting string number to unsigned long long type
+        file_size = strtol((const char*)bytes + last_position + 1, NULL, 10);
+        // opengin the file with the name extracted from the video header
+        outfile = fopen(file_name, "wb");
+        // making sure this code happens only for the first frame
+        is_header_done = true;
+    }else{
+        // save the bytes extracted from the frames of the video to the outfile
+        fwrite(bytes, 1, file_size < wrap ? file_size : wrap, outfile);
+        file_size -= wrap;
     }
 }
 
@@ -162,12 +186,14 @@ int video_to_file(char* media){
         av_packet_unref(pPacket);
     }
 
-    printf("\n\nreleasing all the resources\n\n");
+    fclose(outfile);
 
     avformat_close_input(&pFormatContext);
     av_packet_free(&pPacket);
     av_frame_free(&pFrame);
     avcodec_free_context(&pCodecContext);
+
+    printf("\n\ndone converting the video back to a file\n\n");
 
     return 0;
 }
