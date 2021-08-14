@@ -66,10 +66,10 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
         exit(1);
 
     /* put sample parameters */
-    c->bit_rate = 800000 * 2;
+    c->bit_rate = 1000000;
     /* resolution must be a multiple of two */
     c->width = 1280;
-    c->height = 64;
+    c->height = 64 / 2;
     /* frames per second */
     c->time_base = (AVRational){1, 24};
     c->framerate = (AVRational){24, 1};
