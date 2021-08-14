@@ -20,18 +20,26 @@ extern "C" {
 int main(int argc, char **argv) {
 
     if(argc < 2){
-        printf("program usage: main <verb>\n");
+        printf("program usage: main <verb> <file_path>\n");
         return 0;
     }
 
     if(strcmp(argv[1], "encode") == 0){
-        //converting a buffer of bytes into a video
-        if(file_to_video("Capture.PNG", "test.mp4") == 1){
+        if(argv[2] == NULL){
+            printf("[ERROR]: you need to specify the path of the file you want to encode\n");
+            return 0;
+        }
+        if(file_to_video(argv[2], argv[3] == NULL ? "a.mp4" : argv[3]) == 1){
             printf("\n[ERROR] ===> the minimum file size is 12 KB\n");
         };
     }else if(strcmp(argv[1], "decode") == 0){
-        // converting a video to a file
-        video_to_file("test.mp4");
+        if(argv[2] == NULL){
+            printf("[ERROR]: you need to specify the path of the video you want to decode\n");
+            return 0;
+        }
+        video_to_file(argv[2]);
+    }else{
+        printf("[ERROR]: you only have two options ===> encode or decode for <verb>\n");
     }
 
     return 0;

@@ -8,3 +8,6 @@ void bits_to_byte(uint8_t* byte_bits, uint8_t* the_byte);
 
 // funcions for extracting the basename from a path
 char *basename(char const *path);
+
+// calculates the percentage from a value and a maximum value
+float get_percentage(int value, int total);

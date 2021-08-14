@@ -16,7 +16,7 @@ bool is_header_done = false;
 char file_name[1024];
 size_t file_size;
 
-static void save_color_frame(uint8_t *buf, int wrap, int xsize, int ysize, char *filename){
+static void save_frame_to_file(uint8_t *buf, int wrap, int xsize, int ysize){
     uint8_t bytes[wrap];
     uint8_t bits[8];
     uint8_t byte;
@@ -74,13 +74,11 @@ static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext, AVFra
         }
 
         if (response >= 0) {
-            char frame_filename[1024];
-            snprintf(frame_filename, sizeof(frame_filename), "media/%s-%d.pgm", "frame", pCodecContext->frame_number);
             if (pFrame->format != AV_PIX_FMT_YUV420P) {
                 printf("Warning: the generated file may not be a grayscale image, but could e.g. be just the R component if the video format is RGB");
             }
             // save a grayscale frame into a .pgm file
-            save_color_frame(pFrame->data[0], pFrame->linesize[0], pFrame->width, pFrame->height, frame_filename);
+            save_frame_to_file(pFrame->data[0], pFrame->linesize[0], pFrame->width, pFrame->height);
         }
     }
     return 0;

@@ -20,9 +20,6 @@ static void encode_frame(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
     int ret;
 
     /* send the frame to the encoder */
-    if (frame)
-        printf("Send frame %3"PRId64"\n", frame->pts);
-
     ret = avcodec_send_frame(enc_ctx, frame);
     if (ret < 0) {
         fprintf(stderr, "Error sending a frame for encoding\n");
@@ -37,8 +34,6 @@ static void encode_frame(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
             fprintf(stderr, "Error during encoding\n");
             exit(1);
         }
-
-        printf("Write packet %3"PRId64" (size=%5d)\n", pkt->pts, pkt->size);
         fwrite(pkt->data, 1, pkt->size, outfile);
         av_packet_unref(pkt);
     }
@@ -133,14 +128,21 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
     FILE* infile = fopen(infilepath, "rb");
     fseek(infile, 0, SEEK_END);
     size_t infile_size =  ftell(infile);
-    if(infile_size < 12800) return 1;
+    if(infile_size < 12800) {
+        fclose(f);
+        fclose(infile);
+        remove(outfilepath);
+        return 1;
+    }
     rewind(infile);
-    unsigned long long frames_count = (uint8_t)ceil((double)infile_size / (double)frame->width);
+    unsigned long long frames_count = (unsigned long long)ceil((double)infile_size / (double)frame->width);
     printf("number of frames to store %u bytes is: %u\n", infile_size, frames_count);
 
     bool is_header_written = false;
 
     /* encode video frames */
+    int number = 20;
+    int print_every = number;
     for (i = 0; i < frames_count + 2; i++) {
         fflush(stdout);
 
@@ -187,6 +189,13 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
 
         // freeing the memory allocation
         free(bytes);
+
+        // printing the progress
+        if(print_every == 0) {
+            printf("progress: %f\n", get_percentage(i, frames_count + 2));
+            print_every = number;
+        }
+        print_every--;
     }
 
     /* flush the encoder */

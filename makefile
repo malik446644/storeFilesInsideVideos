@@ -1,4 +1,4 @@
-main: clear temp/main.o
+main: temp/*.o
 	$(info =========> linking the app <=========)
 	g++ \
 	-o dist/main.exe \
@@ -13,43 +13,7 @@ main: clear temp/main.o
 	-lswresample \
 	-lpostproc
 
-	dist/main.exe
-
-encode: clear temp/main.o
-	$(info =========> linking the app <=========)
-	g++ \
-	-o dist/main.exe \
-	temp/*.o \
-	-L./libs/ffmpeg/lib \
-	-lavcodec \
-	-lavformat  \
-	-lavdevice  \
-	-lavfilter  \
-	-lavutil  \
-	-lswscale  \
-	-lswresample \
-	-lpostproc
-
-	dist/main.exe encode
-
-decode: clear temp/main.o
-	$(info =========> linking the app <=========)
-	g++ \
-	-o dist/main.exe \
-	temp/*.o \
-	-L./libs/ffmpeg/lib \
-	-lavcodec \
-	-lavformat  \
-	-lavdevice  \
-	-lavfilter  \
-	-lavutil  \
-	-lswscale  \
-	-lswresample \
-	-lpostproc
-
-	dist/main.exe decode
-
-temp/main.o: src/main.cpp
+temp/*.o: src/*.cpp
 	$(info =========> compiling the app <=========)
 	g++ \
 	-std=c++17 \
