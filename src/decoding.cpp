@@ -15,6 +15,8 @@ FILE* outfile;
 bool is_header_done = false;
 char file_name[1024];
 size_t file_size;
+unsigned long long frames_count;
+unsigned long long i;
 
 static void save_frame_to_file(uint8_t *buf, int wrap, int xsize, int ysize){
     uint8_t bytes[wrap];
@@ -50,6 +52,8 @@ static void save_frame_to_file(uint8_t *buf, int wrap, int xsize, int ysize){
         outfile = fopen(file_name, "wb");
         // making sure this code happens only for the first frame
         is_header_done = true;
+        // calculating the frames count
+        frames_count = (unsigned long long)ceil((double)file_size / (double)wrap);
     }else{
         // save the bytes extracted from the frames of the video to the outfile
         fwrite(bytes, 1, file_size < wrap ? file_size : wrap, outfile);
@@ -57,6 +61,8 @@ static void save_frame_to_file(uint8_t *buf, int wrap, int xsize, int ysize){
     }
 }
 
+int number = 150;
+int print_every = number;
 static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext, AVFrame *pFrame){
     int response = avcodec_send_packet(pCodecContext, pPacket);
     if (response < 0) {
@@ -79,7 +85,13 @@ static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext, AVFra
             }
             // save a grayscale frame into a .pgm file
             save_frame_to_file(pFrame->data[0], pFrame->linesize[0], pFrame->width, pFrame->height);
+            if(print_every == 0) {
+                printf("progress: %f\n", get_percentage(i, frames_count));
+                print_every = number;
+            }
+            print_every--;
         }
+        i++;
     }
     return 0;
 }
@@ -174,6 +186,7 @@ int video_to_file(char* media){
         return -1;
     }
 
+    unsigned long long i = 0;
     int response = 0;
     while (av_read_frame(pFormatContext, pPacket) >= 0)
     {
