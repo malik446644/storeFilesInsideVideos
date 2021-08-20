@@ -22,7 +22,9 @@ temp/*.o: src/*.cpp
 	src/*.cpp \
 	-I./libs/ffmpeg/include
 
+	mv *.o ./temp
+
 clear:
-	del temp\*.o
-	del dist\*.exe
-	del *.o
+	rm temp\*.o
+	rm dist\*.exe
+	rm *.o
