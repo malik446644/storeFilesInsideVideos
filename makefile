@@ -1,7 +1,7 @@
 main: temp/*.o
 	$(info =========> linking the app <=========)
 	g++ \
-	-o dist/main.exe \
+	-o dist/videod.exe \
 	temp/*.o \
 	-L./libs/ffmpeg/lib \
 	-lavcodec \
@@ -21,8 +21,6 @@ temp/*.o: src/*.cpp
 	-c \
 	src/*.cpp \
 	-I./libs/ffmpeg/include
-
-	move *.o temp
 
 clear:
 	del temp\*.o
