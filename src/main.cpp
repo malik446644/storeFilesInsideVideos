@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
             return 0;
         }
         if(file_to_video(argv[2], argv[3] == NULL ? "a.mp4" : argv[3]) == 1){
-            printf("\n[ERROR] ===> the minimum file size is 12 KB\n");
+            printf("\n[ERROR] ===> the minimum file size is 72 KB\n");
         };
     }else if(strcmp(argv[1], "decode") == 0){
         if(argv[2] == NULL){
