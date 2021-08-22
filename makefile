@@ -13,13 +13,12 @@ main: temp/*.o
 	-lswresample \
 	-lpostproc
 
-temp/*.o: src/*.cpp
+temp/*.o: src/*.c
 	$(info =========> compiling the app <=========)
 	gcc \
-	-std=c++17 \
 	-g \
 	-c \
-	src/*.cpp \
+	src/*.c \
 	-I./libs/ffmpeg/include
 
 	mv *.o ./temp
