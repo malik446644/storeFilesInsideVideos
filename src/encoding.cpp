@@ -66,7 +66,7 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
         exit(1);
 
     /* put sample parameters */
-    c->bit_rate = 1000000 * 4;
+    c->bit_rate = 1000000 * 3.75;
     /* resolution must be a multiple of two */
     c->width = 1280;
     c->height = 40;
