@@ -18,22 +18,25 @@ size_t file_size;
 unsigned long long frames_count;
 unsigned long long i;
 
-static void save_frame_to_file(uint8_t *buf, int wrap, int xsize, int ysize){
-    uint8_t bytes[wrap];
+static void save_frame_to_file(uint8_t *buf, int wrap, int xsize, int ysize, int number_of_bytes_per_frame){
+    uint8_t bytes[number_of_bytes_per_frame];
     uint8_t bits[8];
     uint8_t byte;
-    int ysize_part = ysize / 8;
-    for (int x = 0; x < wrap; x++) {
-        bits[0] = buf[(0 + (ysize_part / 2)) * wrap + x] > 127 ? 1 : 0;
-        bits[1] = buf[((ysize_part * 1) + (ysize_part / 2)) * wrap + x] > 127 ? 1 : 0;
-        bits[2] = buf[((ysize_part * 2) + (ysize_part / 2)) * wrap + x] > 127 ? 1 : 0;
-        bits[3] = buf[((ysize_part * 3) + (ysize_part / 2)) * wrap + x] > 127 ? 1 : 0;
-        bits[4] = buf[((ysize_part * 4) + (ysize_part / 2)) * wrap + x] > 127 ? 1 : 0;
-        bits[5] = buf[((ysize_part * 5) + (ysize_part / 2)) * wrap + x] > 127 ? 1 : 0;
-        bits[6] = buf[((ysize_part * 6) + (ysize_part / 2)) * wrap + x] > 127 ? 1 : 0;
-        bits[7] = buf[((ysize_part * 7) + (ysize_part / 2)) * wrap + x] > 127 ? 1 : 0;
-        bits_to_byte(bits, &byte);
-        bytes[x] = byte;
+    size_t z = 0;
+    for (int x = 0; x < ysize; x++) {
+        for (int y = 0; y < xsize; y = y + 8) {
+            bits[0] = buf[(x * xsize + y) + 0] > 127 ? 1 : 0;
+            bits[1] = buf[(x * xsize + y) + 1] > 127 ? 1 : 0;
+            bits[2] = buf[(x * xsize + y) + 2] > 127 ? 1 : 0;
+            bits[3] = buf[(x * xsize + y) + 3] > 127 ? 1 : 0;
+            bits[4] = buf[(x * xsize + y) + 4] > 127 ? 1 : 0;
+            bits[5] = buf[(x * xsize + y) + 5] > 127 ? 1 : 0;
+            bits[6] = buf[(x * xsize + y) + 6] > 127 ? 1 : 0;
+            bits[7] = buf[(x * xsize + y) + 7] > 127 ? 1 : 0;
+            bits_to_byte(bits, &byte);
+            bytes[z] = byte;
+            z++;
+        }
     }
     if(is_header_done == false) {
         // extract the name and the size of the file
@@ -53,17 +56,17 @@ static void save_frame_to_file(uint8_t *buf, int wrap, int xsize, int ysize){
         // making sure this code happens only for the first frame
         is_header_done = true;
         // calculating the frames count
-        frames_count = (unsigned long long)ceil((double)file_size / (double)wrap);
+        frames_count = file_size / number_of_bytes_per_frame;
     }else{
         // save the bytes extracted from the frames of the video to the outfile
-        fwrite(bytes, 1, file_size < wrap ? file_size : wrap, outfile);
-        file_size -= wrap;
+        fwrite(bytes, 1, file_size < number_of_bytes_per_frame ? file_size : number_of_bytes_per_frame, outfile);
+        file_size -= number_of_bytes_per_frame;
     }
 }
 
 int number = 150;
 int print_every = number;
-static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext, AVFrame *pFrame){
+static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext, AVFrame *pFrame, int number_of_bytes_per_frame){
     int response = avcodec_send_packet(pCodecContext, pPacket);
     if (response < 0) {
         printf("Error while sending a packet to the decoder\n");
@@ -83,8 +86,8 @@ static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext, AVFra
             if (pFrame->format != AV_PIX_FMT_YUV420P) {
                 printf("Warning: the generated file may not be a grayscale image, but could e.g. be just the R component if the video format is RGB");
             }
-            // save a grayscale frame into a .pgm file
-            save_frame_to_file(pFrame->data[0], pFrame->linesize[0], pFrame->width, pFrame->height);
+            // save a grayscale frame to file
+            save_frame_to_file(pFrame->data[0], pFrame->linesize[0], pFrame->width, pFrame->height, number_of_bytes_per_frame);
             if(print_every == 0) {
                 printf("progress: %f\n", get_percentage(i, frames_count));
                 print_every = number;
@@ -188,10 +191,11 @@ int video_to_file(char* media){
 
     unsigned long long i = 0;
     int response = 0;
+    int number_of_bytes_per_frame = (pCodecContext->width * pCodecContext->height) / 8;
     while (av_read_frame(pFormatContext, pPacket) >= 0)
     {
         if (pPacket->stream_index == video_stream_index) {
-            response = decode_packet(pPacket, pCodecContext, pFrame);
+            response = decode_packet(pPacket, pCodecContext, pFrame, number_of_bytes_per_frame);
             if (response < 0) break;
         }
         av_packet_unref(pPacket);

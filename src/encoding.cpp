@@ -66,7 +66,7 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
         exit(1);
 
     /* put sample parameters */
-    c->bit_rate = 1000000 * 2;
+    c->bit_rate = 1000000 * 4;
     /* resolution must be a multiple of two */
     c->width = 1280;
     c->height = 40;
@@ -82,7 +82,7 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
      */
     c->gop_size = 10;
     c->max_b_frames = 1;
-    c->pix_fmt = AV_PIX_FMT_YUV420P;
+    c->pix_fmt = AV_PIX_FMT_GRAY8;
 
     // adding option in code context to make the encoding slower and better
     if (codec->id == AV_CODEC_ID_H264)
@@ -119,15 +119,9 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
     // calculating bytes number per frame
     unsigned long long bytes_size_per_frame = (frame->width * frame->height) / 8;
     
-    // creating buffer to store gray data of every frame
-    uint8_t* realData = (uint8_t*)malloc(frame->height * frame->width);
-    uint8_t* theData[4] = {realData, NULL, NULL, NULL};
-    int lineSize[4] = {frame->width, 0, 0, 0};
-    //creating scalara context
-    SwsContext* swsCtx = sws_getContext(frame->width, frame->height, AV_PIX_FMT_GRAY8, frame->width, frame->height, c->pix_fmt, SWS_BILINEAR, NULL, NULL, NULL);
-
     // open the file to take the data from
     char* infile_name = basename(infilepath);            // extracting the name of the file from the path
+    printf("the path is %s\nthe base name is: %s\n", infilepath, infile_name);
     FILE* infile = fopen(infilepath, "rb");
     fseek(infile, 0, SEEK_END);
     size_t infile_size =  ftell(infile);
@@ -169,20 +163,17 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
             for (int y = 0; y < frame->width; y = y + 8) {
                 uint8_t arr[8];
                 byte_to_bits(arr, bytes[z]);
-                realData[(x * frame->width + y) + 0] = arr[0] == 1 ? 255 : 0;
-                realData[(x * frame->width + y) + 1] = arr[1] == 1 ? 255 : 0;
-                realData[(x * frame->width + y) + 2] = arr[2] == 1 ? 255 : 0;
-                realData[(x * frame->width + y) + 3] = arr[3] == 1 ? 255 : 0;
-                realData[(x * frame->width + y) + 4] = arr[4] == 1 ? 255 : 0;
-                realData[(x * frame->width + y) + 5] = arr[5] == 1 ? 255 : 0;
-                realData[(x * frame->width + y) + 6] = arr[6] == 1 ? 255 : 0;
-                realData[(x * frame->width + y) + 7] = arr[7] == 1 ? 255 : 0;
+                frame->data[0][(x * frame->width + y) + 0] = arr[0] == 1 ? 255 : 0;
+                frame->data[0][(x * frame->width + y) + 1] = arr[1] == 1 ? 255 : 0;
+                frame->data[0][(x * frame->width + y) + 2] = arr[2] == 1 ? 255 : 0;
+                frame->data[0][(x * frame->width + y) + 3] = arr[3] == 1 ? 255 : 0;
+                frame->data[0][(x * frame->width + y) + 4] = arr[4] == 1 ? 255 : 0;
+                frame->data[0][(x * frame->width + y) + 5] = arr[5] == 1 ? 255 : 0;
+                frame->data[0][(x * frame->width + y) + 6] = arr[6] == 1 ? 255 : 0;
+                frame->data[0][(x * frame->width + y) + 7] = arr[7] == 1 ? 255 : 0;
                 z++;
             }
         }
-
-        // converting the gray data to yuv and pushit to the frame
-        sws_scale(swsCtx, theData, lineSize, 0, frame->height, frame->data, frame->linesize);
 
         frame->pts = i;
 
@@ -213,7 +204,7 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
     fclose(f);
     fclose(infile);
 
-    sws_freeContext(swsCtx);
+    // sws_freeContext(swsCtx);
     avcodec_free_context(&c);
     av_frame_free(&frame);
     av_packet_free(&pkt);
