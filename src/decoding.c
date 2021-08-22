@@ -2,12 +2,12 @@
 // this program takes every frame from a video an produces an image from it //
 //////////////////////////////////////////////////////////////////////////////
 
-extern "C" {
-    #include <stdio.h>
-    #include <libavcodec/avcodec.h>
-    #include <libavformat/avformat.h>
-    #include <libavutil/avutil.h>
-}
+#include <stdio.h>
+#include <stdbool.h>
+
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/avutil.h>
 
 #include "functions.h"
 
@@ -64,7 +64,7 @@ static void save_frame_to_file(uint8_t *buf, int wrap, int xsize, int ysize, int
     }
 }
 
-int number = 150;
+const int number = 150;
 int print_every = number;
 static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext, AVFrame *pFrame, int number_of_bytes_per_frame){
     int response = avcodec_send_packet(pCodecContext, pPacket);

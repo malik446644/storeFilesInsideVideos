@@ -1,8 +1,6 @@
-#include <iostream>
-
-extern "C" {
-  #include <string.h>
-}
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
 
 void byte_to_bits(uint8_t* byte_bits, int the_byte) {
   int c, k;

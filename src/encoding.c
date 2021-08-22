@@ -2,16 +2,16 @@
 // this program will encode a video  //
 ///////////////////////////////////////
 
-extern "C" {
-    #include <stdio.h>
-    #include <libavcodec/avcodec.h>
-    #include <libavutil/opt.h>
-    #include <libavutil/imgutils.h>
-    #include <libswscale/swscale.h>
-    #include <time.h>
-    #include <math.h>
-    #include <string.h>
-}
+#include <stdio.h>
+#include <stdbool.h>
+#include <time.h>
+#include <math.h>
+#include <string.h>
+
+#include <libavcodec/avcodec.h>
+#include <libavutil/opt.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
 
 #include "functions.h"
 

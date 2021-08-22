@@ -1,6 +1,6 @@
 main: temp/*.o
 	$(info =========> linking the app <=========)
-	g++ \
+	gcc \
 	-o dist/videod.exe \
 	temp/*.o \
 	-L./libs/ffmpeg/lib \
@@ -15,7 +15,7 @@ main: temp/*.o
 
 temp/*.o: src/*.cpp
 	$(info =========> compiling the app <=========)
-	g++ \
+	gcc \
 	-std=c++17 \
 	-g \
 	-c \
