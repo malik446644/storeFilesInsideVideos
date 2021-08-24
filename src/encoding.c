@@ -66,7 +66,7 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
         exit(1);
 
     /* put sample parameters */
-    c->bit_rate = 1000000 * 3.75;
+    c->bit_rate = 1000000 * 4;
     /* resolution must be a multiple of two */
     c->width = 1280;
     c->height = 40;
@@ -75,11 +75,11 @@ int file_to_video(const char *infilepath, const char *outfilepath) {
     c->framerate = (AVRational){24, 1};
 
     /* emit one intra frame every ten frames
-     * check frame pict_type before passing frame
-     * to encoder, if frame->pict_type is AV_PICTURE_TYPE_I
-     * then gop_size is ignored and the output of encoder
-     * will always be I frame irrespective to gop_size
-     */
+    * check frame pict_type before passing frame
+    * to encoder, if frame->pict_type is AV_PICTURE_TYPE_I
+    * then gop_size is ignored and the output of encoder
+    * will always be I frame irrespective to gop_size
+    */
     c->gop_size = 10;
     c->max_b_frames = 1;
     c->pix_fmt = AV_PIX_FMT_GRAY8;
