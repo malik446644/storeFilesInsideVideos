@@ -1,6 +1,5 @@
 {
     "files.associations": {
-        "*.cpp": "cpp",
         "cctype": "cpp",
         "cmath": "cpp",
         "compare": "cpp",
@@ -52,8 +51,6 @@
         "ranges": "cpp",
         "sstream": "cpp",
         "stdexcept": "cpp",
-        "streambuf": "cpp",
-        "avcodec.h": "c",
-        "avformat.h": "c"
+        "streambuf": "cpp"
     }
 }

@@ -1,6 +1,6 @@
 main: temp/*.o
 	$(info =========> linking the app <=========)
-	gcc \
+	g++ \
 	-o dist/videod.exe \
 	temp/*.o \
 	-L./libs/ffmpeg/lib \
@@ -13,12 +13,18 @@ main: temp/*.o
 	-lswresample \
 	-lpostproc
 
-temp/*.o: src/*.c
+temp/*.o: src/*.cpp
 	$(info =========> compiling the app <=========)
-	gcc \
+	g++ \
+	-std=c++17 \
 	-g \
 	-c \
-	src/*.c \
+	src/*.cpp \
 	-I./libs/ffmpeg/include
 
 	mv *.o ./temp
+
+clear:
+	rm temp\*.o
+	rm dist\*.exe
+	rm *.o
